@@ -30,7 +30,7 @@ spec:
         component: otel-collector
         release: default
       annotations:
-        checksum/config: 209b40a11984e4ef1ea7efbaa911098ff252ab9b91183eaf958b543506d10d82
+        checksum/config: a69744e48eac6b1492faf9ee1523aaf8506c5c73d88c8af1562fc65a2ae8bedf
     spec:
       serviceAccountName: default-splunk-otel-collector
       nodeSelector:
@@ -71,11 +71,6 @@ spec:
               secretKeyRef:
                 name: default-splunk-otel-collector
                 key: splunk_observability_access_token
-          - name: SPLUNK_PLATFORM_HEC_TOKEN
-            valueFrom:
-              secretKeyRef:
-                name: default-splunk-otel-collector
-                key: splunk_platform_hec_token
         ports:
         - name: http-forwarder
           containerPort: 6060

@@ -37,7 +37,7 @@ data:
         splunk_app_version: 0.86.1
         timeout: 10s
         tls:
-          insecure_skip_verify: true
+          insecure_skip_verify: false
         token: ${SPLUNK_PLATFORM_HEC_TOKEN}
     extensions:
       health_check: null

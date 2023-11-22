@@ -23,28 +23,6 @@ data:
         disable_default_translation_rules: true
         ingest_url: https://ingest.CHANGEME.signalfx.com
         timeout: 10s
-      splunk_hec/platform_metrics:
-        disable_compression: true
-        endpoint: http://http://10.202.12.84:8088/services/collector/event
-        idle_conn_timeout: 10s
-        index: kube_mterics
-        max_connections: 200
-        retry_on_failure:
-          enabled: true
-          initial_interval: 5s
-          max_elapsed_time: 300s
-          max_interval: 30s
-        sending_queue:
-          enabled: true
-          num_consumers: 10
-          queue_size: 5000
-        source: kubernetes
-        splunk_app_name: splunk-otel-collector
-        splunk_app_version: 0.86.1
-        timeout: 10s
-        tls:
-          insecure_skip_verify: true
-        token: ${SPLUNK_PLATFORM_HEC_TOKEN}
     extensions:
       health_check: null
       memory_ballast:
@@ -149,7 +127,6 @@ data:
         metrics:
           exporters:
           - signalfx
-          - splunk_hec/platform_metrics
           processors:
           - memory_limiter
           - batch
@@ -161,7 +138,6 @@ data:
         metrics/collector:
           exporters:
           - signalfx
-          - splunk_hec/platform_metrics
           processors:
           - memory_limiter
           - batch

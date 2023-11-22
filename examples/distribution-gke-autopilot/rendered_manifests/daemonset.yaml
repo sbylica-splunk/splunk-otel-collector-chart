@@ -31,7 +31,7 @@ spec:
         component: otel-collector-agent
         release: default
       annotations:
-        checksum/config: 808cb8d72bd11a7805e53f3243751d9e233a7cfda37c18b09712d215203a650d
+        checksum/config: c736cf9de7b71d21d1ac44d4e9b1eac0ca27cbfc1c0d14eae6b96cec518ba2ba
         kubectl.kubernetes.io/default-container: otel-collector
     spec:
       hostNetwork: true
@@ -45,17 +45,12 @@ spec:
           key: node-role.kubernetes.io/master
         - effect: NoSchedule
           key: node-role.kubernetes.io/control-plane
-      initContainers:
       containers:
       - name: otel-collector
         command:
         - /otelcol
         - --config=/conf/relay.yaml
         ports:
-        - name: fluentforward
-          containerPort: 8006
-          hostPort: 8006
-          protocol: TCP
         - name: jaeger-grpc
           containerPort: 14250
           hostPort: 14250
@@ -88,8 +83,6 @@ spec:
           protocol: TCP
         image: quay.io/signalfx/splunk-otel-collector:0.86.0
         imagePullPolicy: IfNotPresent
-        securityContext:
-          runAsUser: 0
         env:
           - name: SPLUNK_MEMORY_TOTAL_MIB
             value: "500"
@@ -124,11 +117,6 @@ spec:
               secretKeyRef:
                 name: default-splunk-otel-collector
                 key: splunk_observability_access_token
-          - name: SPLUNK_PLATFORM_HEC_TOKEN
-            valueFrom:
-              secretKeyRef:
-                name: default-splunk-otel-collector
-                key: splunk_platform_hec_token
           # Env variables for host metrics receiver
           - name: HOST_PROC
             value: /hostfs/proc
@@ -181,11 +169,6 @@ spec:
         - mountPath: /hostfs/var/run/utmp
           name: host-var-run-utmp
           readOnly: true
-        - name: varlog
-          mountPath: /var/log
-          readOnly: true
-        - name: checkpoint
-          mountPath: /var/addon/splunk/otel_pos
         - mountPath: /usr/lib/splunk-otel-collector/agent-bundle/run/collectd
           name: run-collectd
           readOnly: false
@@ -194,13 +177,6 @@ spec:
       - name: run-collectd
         emptyDir:
           sizeLimit: 25Mi
-      - name: varlog
-        hostPath:
-          path: /var/log
-      - name: checkpoint
-        hostPath:
-          path: /var/addon/splunk/otel_pos
-          type: DirectoryOrCreate
       - name: host-dev
         hostPath:
           path: /dev

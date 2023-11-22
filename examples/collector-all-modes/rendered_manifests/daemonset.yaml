@@ -31,7 +31,7 @@ spec:
         component: otel-collector-agent
         release: default
       annotations:
-        checksum/config: 1e22d648344446061cdf16bef9a807da814fd05f1265c051975297aa14afabfa
+        checksum/config: 8ad500f760132e28476c7a6d5687b77d4c72ddf443858a38ee1933b162cd97e1
         kubectl.kubernetes.io/default-container: otel-collector
     spec:
       hostNetwork: true
@@ -45,51 +45,12 @@ spec:
           key: node-role.kubernetes.io/master
         - effect: NoSchedule
           key: node-role.kubernetes.io/control-plane
-      initContainers:
-        - name: migrate-checkpoint
-          image: quay.io/signalfx/splunk-otel-collector:0.86.0
-          imagePullPolicy: IfNotPresent
-          command: ["/migratecheckpoint"]
-          securityContext:
-            runAsUser: 0
-          env:
-          - name: CONTAINER_LOG_PATH_FLUENTD
-            value: "/var/log/splunk-fluentd-containers.log.pos"
-          - name: CONTAINER_LOG_PATH_OTEL
-            value: "/var/addon/splunk/otel_pos/receiver_filelog_"
-          - name: CUSTOM_LOG_PATH_FLUENTD
-            value: "/var/log/splunk-fluentd-*.pos"
-          - name: CUSTOM_LOG_PATH_OTEL
-            value: "/var/addon/splunk/otel_pos/receiver_filelog_"
-          - name: CUSTOM_LOG_CAPTURE_REGEX
-            value: '\/var\/log\/splunk\-fluentd\-(?P<name>[\w0-9-_]+)\.pos'
-          - name: JOURNALD_LOG_PATH_FLUENTD
-            value: "/var/log/splunkd-fluentd-journald-*.pos.json"
-          - name: JOURNALD_LOG_PATH_OTEL
-            value: "/var/addon/splunk/otel_pos/receiver_journald_"
-          - name: JOURNALD_LOG_CAPTURE_REGEX
-            value: '\/splunkd\-fluentd\-journald\-(?P<name>[\w0-9-_]+)\.pos\.json'
-          resources:
-            limits:
-              cpu: 200m
-              memory: 500Mi
-          volumeMounts:
-            - name: checkpoint
-              mountPath: /var/addon/splunk/otel_pos
-            - name: varlog
-              mountPath: /var/log
-            - name: varlibdockercontainers
-              mountPath: /var/lib/docker/containers
       containers:
       - name: otel-collector
         command:
         - /otelcol
         - --config=/conf/relay.yaml
         ports:
-        - name: fluentforward
-          containerPort: 8006
-          hostPort: 8006
-          protocol: TCP
         - name: jaeger-grpc
           containerPort: 14250
           hostPort: 14250
@@ -122,8 +83,6 @@ spec:
           protocol: TCP
         image: quay.io/signalfx/splunk-otel-collector:0.86.0
         imagePullPolicy: IfNotPresent
-        securityContext:
-          runAsUser: 0
         env:
           - name: SPLUNK_MEMORY_TOTAL_MIB
             value: "500"
@@ -158,11 +117,6 @@ spec:
               secretKeyRef:
                 name: default-splunk-otel-collector
                 key: splunk_observability_access_token
-          - name: SPLUNK_PLATFORM_HEC_TOKEN
-            valueFrom:
-              secretKeyRef:
-                name: default-splunk-otel-collector
-                key: splunk_platform_hec_token
           # Env variables for host metrics receiver
           - name: HOST_PROC
             value: /hostfs/proc
@@ -215,14 +169,6 @@ spec:
         - mountPath: /hostfs/var/run/utmp
           name: host-var-run-utmp
           readOnly: true
-        - name: varlog
-          mountPath: /var/log
-          readOnly: true
-        - name: varlibdockercontainers
-          mountPath: /var/lib/docker/containers
-          readOnly: true
-        - name: checkpoint
-          mountPath: /var/addon/splunk/otel_pos
         - mountPath: /usr/lib/splunk-otel-collector/agent-bundle/run/collectd
           name: run-collectd
           readOnly: false
@@ -231,16 +177,6 @@ spec:
       - name: run-collectd
         emptyDir:
           sizeLimit: 25Mi
-      - name: varlog
-        hostPath:
-          path: /var/log
-      - name: varlibdockercontainers
-        hostPath:
-          path: /var/lib/docker/containers
-      - name: checkpoint
-        hostPath:
-          path: /var/addon/splunk/otel_pos
-          type: DirectoryOrCreate
       - name: host-dev
         hostPath:
           path: /dev
