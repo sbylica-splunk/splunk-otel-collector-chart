@@ -37,7 +37,7 @@ data:
         splunk_app_version: 0.86.1
         timeout: 10s
         tls:
-          insecure_skip_verify: false
+          insecure_skip_verify: true
         token: ${SPLUNK_PLATFORM_HEC_TOKEN}
     extensions:
       health_check: null
@@ -46,6 +46,42 @@ data:
     processors:
       batch:
         send_batch_max_size: 32768
+      k8sattributes/metrics:
+        extract:
+          annotations:
+          - from: namespace
+            key: splunk.com/metricsIndex
+            tag_name: com.splunk.index
+          - from: pod
+            key: splunk.com/metricsIndex
+            tag_name: com.splunk.index
+        pod_association:
+        - sources:
+          - from: resource_attribute
+            name: k8s.node.name
+        - sources:
+          - from: resource_attribute
+            name: k8s.pod.uid
+        - sources:
+          - from: resource_attribute
+            name: k8s.pod.ip
+        - sources:
+          - from: resource_attribute
+            name: k8s.pod.name
+        - sources:
+          - from: resource_attribute
+            name: k8s.namespace.name
+        - sources:
+          - from: resource_attribute
+            name: ip
+        - sources:
+          - from: resource_attribute
+            name: k8s.deployment.name
+        - sources:
+          - from: connection
+        - sources:
+          - from: resource_attribute
+            name: host.name
       memory_limiter:
         check_interval: 2s
         limit_mib: ${SPLUNK_MEMORY_LIMIT_MIB}
@@ -109,6 +145,7 @@ data:
           - batch
           - resource
           - resource/k8s_cluster
+          - k8sattributes/metrics
           receivers:
           - k8s_cluster
         metrics/collector:
@@ -118,6 +155,7 @@ data:
           - memory_limiter
           - batch
           - resource/add_collector_k8s
+          - k8sattributes/metrics
           - resourcedetection
           - resource
           receivers:

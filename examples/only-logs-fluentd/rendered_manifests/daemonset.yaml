@@ -32,7 +32,7 @@ spec:
         component: otel-collector-agent
         release: default
       annotations:
-        checksum/config: 1e0ac324644614f5ee26ec4fe5a987d65f91f0f0486408efc989fdac624b540a
+        checksum/config: 8a723e4c21bf036ec92e2c2b49588c016a47d392f4b206d37e2be6b07b5eeb90
         kubectl.kubernetes.io/default-container: otel-collector
     spec:
       hostNetwork: true
@@ -134,6 +134,10 @@ spec:
         - name: otlp-http-old
           containerPort: 55681
           protocol: TCP
+        - name: signalfx
+          containerPort: 9943
+          hostPort: 9943
+          protocol: TCP
         image: quay.io/signalfx/splunk-otel-collector:0.86.0
         imagePullPolicy: IfNotPresent
         env:
@@ -170,6 +174,29 @@ spec:
               secretKeyRef:
                 name: default-splunk-otel-collector
                 key: splunk_observability_access_token
+          - name: SPLUNK_PLATFORM_HEC_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: default-splunk-otel-collector
+                key: splunk_platform_hec_token
+          # Env variables for host metrics receiver
+          - name: HOST_PROC
+            value: /hostfs/proc
+          - name: HOST_SYS
+            value: /hostfs/sys
+          - name: HOST_ETC
+            value: /hostfs/etc
+          - name: HOST_VAR
+            value: /hostfs/var
+          - name: HOST_RUN
+            value: /hostfs/run
+          - name: HOST_DEV
+            value: /hostfs/dev
+          # until https://github.com/open-telemetry/opentelemetry-collector-contrib/issues/5879
+          # is resolved fall back to previous gopsutil mountinfo path:
+          # https://github.com/shirou/gopsutil/issues/1271
+          - name: HOST_PROC_MOUNTINFO
+            value: /proc/self/mountinfo
 
         readinessProbe:
           httpGet:
@@ -186,6 +213,24 @@ spec:
         volumeMounts:
         - mountPath: /conf
           name: otel-configmap
+        - mountPath: /hostfs/dev
+          name: host-dev
+          readOnly: true
+        - mountPath: /hostfs/etc
+          name: host-etc
+          readOnly: true
+        - mountPath: /hostfs/proc
+          name: host-proc
+          readOnly: true
+        - mountPath: /hostfs/run/udev/data
+          name: host-run-udev-data
+          readOnly: true
+        - mountPath: /hostfs/sys
+          name: host-sys
+          readOnly: true
+        - mountPath: /hostfs/var/run/utmp
+          name: host-var-run-utmp
+          readOnly: true
         - mountPath: /usr/lib/splunk-otel-collector/agent-bundle/run/collectd
           name: run-collectd
           readOnly: false
@@ -216,6 +261,24 @@ spec:
           name: default-splunk-otel-collector-fluentd-json
       - name: tmp
         emptyDir: {}
+      - name: host-dev
+        hostPath:
+          path: /dev
+      - name: host-etc
+        hostPath:
+          path: /etc
+      - name: host-proc
+        hostPath:
+          path: /proc
+      - name: host-run-udev-data
+        hostPath:
+          path: /run/udev/data
+      - name: host-sys
+        hostPath:
+          path: /sys
+      - name: host-var-run-utmp
+        hostPath:
+          path: /var/run/utmp
       - name: otel-configmap
         configMap:
           name: default-splunk-otel-collector-otel-agent

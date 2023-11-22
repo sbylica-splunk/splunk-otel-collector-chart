@@ -84,6 +84,7 @@ receivers:
 
 processors:
   {{- include "splunk-otel-collector.otelMemoryLimiterConfig" . | nindent 2 }}
+  {{- include "splunk-otel-collector.k8sAttributesProcessorMetrics" . | nindent 2 }}
 
   batch:
     send_batch_max_size: 32768
@@ -212,7 +213,7 @@ service:
     # k8s metrics pipeline
     metrics:
       receivers: [k8s_cluster]
-      processors: [memory_limiter, batch, resource, resource/k8s_cluster]
+      processors: [memory_limiter, batch, resource, resource/k8s_cluster, k8sattributes/metrics]
       exporters:
         {{- if (eq (include "splunk-otel-collector.o11yMetricsEnabled" .) "true") }}
         - signalfx
@@ -224,7 +225,7 @@ service:
     {{- if eq (include "splunk-otel-collector.distribution" .) "eks/fargate" }}
     metrics/eks:
       receivers: [receiver_creator]
-      processors: [memory_limiter, batch, resource]
+      processors: [memory_limiter, batch, resource, k8sattributes/metrics]
       exporters:
         {{- if (eq (include "splunk-otel-collector.o11yMetricsEnabled" .) "true") }}
         - signalfx
@@ -241,6 +242,7 @@ service:
         - memory_limiter
         - batch
         - resource/add_collector_k8s
+        - k8sattributes/metrics
         - resourcedetection
         - resource
       exporters:
