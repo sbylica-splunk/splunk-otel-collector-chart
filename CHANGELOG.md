@@ -4,6 +4,29 @@
 <!-- For unreleased changes, see entries in .chloggen -->
 <!-- next version -->
 
+## [0.159.0] - 2026-08-27
+
+This Splunk OpenTelemetry Collector for Kubernetes release adopts the [Splunk OpenTelemetry Collector v0.159.0](https://github.com/signalfx/splunk-otel-collector/releases/tag/v0.159.0).
+
+### 🛑 Breaking changes 🛑
+
+- `agent`: Remove `splunkObservability.logsEnabled` option ([#2058](https://github.com/signalfx/splunk-otel-collector-chart/pull/2058))
+  Logs cannot be sent directly to Splunk Observability anymore.
+  Configure `splunkPlatform` to send logs to Splunk Platform and enable Log Observer Connect to view the logs in Splunk Observability.
+  See the following documentation for more details: https://help.splunk.com/en/splunk-observability-cloud/manage-data/view-splunk-platform-logs/accomplish-logs-pipeline-rules-in-splunk-platform
+  
+- `all`: Update labels in all resources ([#2027](https://github.com/signalfx/splunk-otel-collector-chart/pull/2027))
+  - Remove "heritage" label from all objects managed by the chart
+  - Set all "app.kubernetes.io/managed-by" labels to "Helm"
+  
+
+### 💡 Enhancements 💡
+
+- `chart`: Adds configuration option for Splunk Platform metrics sourcetype ([#1941](https://github.com/signalfx/splunk-otel-collector-chart/pull/1941))
+  - Users can override the metrics sourcetype for Splunk Platform using the `splunk.com/metricsSourcetype` annotation or the `.Values.splunkPlatform.metricsSourcetype` Helm value.
+  - See `advanced-configuration.md` for detailed precedence and usage notes.
+  
+
 ## [0.134.0] - 2025-09-04
 
 This Splunk OpenTelemetry Collector for Kubernetes release adopts the [Splunk OpenTelemetry Collector v0.134.0](https://github.com/signalfx/splunk-otel-collector/releases/tag/v0.134.0).
